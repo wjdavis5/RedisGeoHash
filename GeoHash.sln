@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28010.2003
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeoHash", "GeoHash\GeoHash.csproj", "{9A523181-B761-41FE-BD50-1723140F863D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApp", "TestApp\TestApp.csproj", "{C63C9BE1-7945-435F-9B24-1C996128F354}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9A523181-B761-41FE-BD50-1723140F863D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9A523181-B761-41FE-BD50-1723140F863D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9A523181-B761-41FE-BD50-1723140F863D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9A523181-B761-41FE-BD50-1723140F863D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C63C9BE1-7945-435F-9B24-1C996128F354}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C63C9BE1-7945-435F-9B24-1C996128F354}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C63C9BE1-7945-435F-9B24-1C996128F354}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C63C9BE1-7945-435F-9B24-1C996128F354}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {845B9C64-7B7B-4AF0-B44E-52D4993E1F2D}
+	EndGlobalSection
+EndGlobal
