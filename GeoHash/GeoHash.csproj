@@ -2,6 +2,15 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>RedisGeoHash</AssemblyName>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Authors>wjdavis5</Authors>
+    <Description>A library for creating RedisGeo Hash values within .NET</Description>
+    <Copyright>2018</Copyright>
+    <PackageProjectUrl>https://github.com/wjdavis5/RedisGeoHash</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/wjdavis5/RedisGeoHash</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>redis,chsarp,geohash,geohashing</PackageTags>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
