@@ -21,17 +21,16 @@ public void Test()
         }
             
 			
-			/*        
-            compared to redis:
-
-            will@will-laptop:/mnt/c/Users/wdavis$ redis-cli
-            127.0.0.1:6379> geoadd willt -86.1078998 39.923422 1
-            (integer) 1
-            127.0.0.1:6379> zrange willt 0 100 WITHSCORES
-            1) "1"
-            2) "1782901374540128"
-
-            */
     }
 
+```
+
+*compared to redis:*
+```
+will@will-laptop:/mnt/c/Users/wdavis$ redis-cli
+127.0.0.1:6379> geoadd willt -86.1078998 39.923422 1
+(integer) 1
+127.0.0.1:6379> zrange willt 0 100 WITHSCORES
+1) "1"
+2) "1782901374540128"
 ```
