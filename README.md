@@ -25,7 +25,7 @@ public void Test()
 
 ```
 
-*compared to redis:*
+**Compared to Redis:**
 ```
 will@will-laptop:/mnt/c/Users/wdavis$ redis-cli
 127.0.0.1:6379> geoadd willt -86.1078998 39.923422 1
