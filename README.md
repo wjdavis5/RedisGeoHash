@@ -1,6 +1,10 @@
 # RedisGeoHash
 A library for creating RedisGeo Hash values within .NET
 
+# Credits
+This is a C# port of the Redis Geo Hash code by antirez
+https://github.com/antirez/redis
+
 
 # Why?
 When I was involved in the writting of the Stackexchange.Redis Geo functionality I become interested in how they are using GeoHashes to store
