@@ -10,12 +10,8 @@
     <PackageProjectUrl>https://github.com/wjdavis5/RedisGeoHash</PackageProjectUrl>
     <RepositoryUrl>https://github.com/wjdavis5/RedisGeoHash</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageTags>redis,chsarp,geohash,geohashing</PackageTags>
-
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PackageTags>redis,csharp,geohash,geohashing</PackageTags>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
 </Project>

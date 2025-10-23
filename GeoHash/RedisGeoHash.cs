@@ -5,6 +5,10 @@ using System.Text;
 
 namespace GeoHash
 {
+    /// <summary>
+    /// Represents a Redis-compatible GeoHash implementation for encoding and decoding geographic coordinates.
+    /// This is a C# port of the Redis Geo Hash code.
+    /// </summary>
     public class RedisGeoHash
     {
 
@@ -12,18 +16,49 @@ namespace GeoHash
         private const double GeoLatMax = 85.05112878;
         private const double GeoLongMin = -180;
         private const double GeoLongMax = 180;
+        /// <summary>
+        /// The maximum step value for GeoHash encoding.
+        /// </summary>
         public const int GeoStepMax = 26;
 
+        /// <summary>
+        /// Gets the latitude and longitude as an array [latitude, longitude].
+        /// </summary>
         public double[] LatLon { get; private set; }
+        
+        /// <summary>
+        /// Gets the latitude value.
+        /// </summary>
         public double Latitude => LatLon[0];
+        
+        /// <summary>
+        /// Gets the longitude value.
+        /// </summary>
         public double Longitude => LatLon[1];
 
+        /// <summary>
+        /// Gets the GeoHash value as an unsigned 64-bit integer.
+        /// </summary>
         public ulong GeoHash => GeoHashBits.Bits;
 
+        /// <summary>
+        /// Gets the GeoHash bits structure containing the hash value and step.
+        /// </summary>
         public GeoHashBits GeoHashBits { get; private set; }
 
+        /// <summary>
+        /// Initializes a new instance of the RedisGeoHash class with the specified latitude and longitude.
+        /// </summary>
+        /// <param name="latlon">An array containing latitude at index 0 and longitude at index 1.</param>
+        /// <exception cref="ArgumentNullException">Thrown when latlon is null.</exception>
+        /// <exception cref="ArgumentException">Thrown when latlon does not contain exactly 2 elements.</exception>
         public RedisGeoHash(double[] latlon)
         {
+            if (latlon == null)
+                throw new ArgumentNullException(nameof(latlon));
+            if (latlon.Length != 2)
+                throw new ArgumentException("Array must contain exactly 2 elements (latitude and longitude).", nameof(latlon));
+            
             LatLon = latlon;
             var bits = new GeoHashBits();
             var res = GeohashEncodeWgs84(Longitude, Latitude, RedisGeoHash.GeoStepMax, ref bits);
@@ -165,6 +200,14 @@ namespace GeoHash
 
         }
 
+        /// <summary>
+        /// Encodes a geographic coordinate (longitude, latitude) into a GeoHash using the WGS84 coordinate system.
+        /// </summary>
+        /// <param name="longitude">The longitude value.</param>
+        /// <param name="latitude">The latitude value.</param>
+        /// <param name="step">The precision step for the GeoHash encoding.</param>
+        /// <param name="hash">The output GeoHashBits structure to store the result.</param>
+        /// <returns>1 if encoding was successful, 0 otherwise.</returns>
         public  int GeohashEncodeWgs84(double longitude, double latitude, ushort step,
             ref GeoHashBits hash)
         {

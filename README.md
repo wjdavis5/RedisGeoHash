@@ -7,7 +7,7 @@ https://github.com/antirez/redis
 
 
 # Why?
-When I was involved in the writting of the Stackexchange.Redis Geo functionality I become interested in how they are using GeoHashes to store
+When I was involved in the writing of the Stackexchange.Redis Geo functionality I become interested in how they are using GeoHashes to store
 information in sorted sets. Behind the scense a RedisGeo collection is nothing more than a SortSet. They use a numerical represenation of 
 GeoHashes to achieve this. I wanted to do the same thing from within .NET to implemented local GEO collections for caching purposes at work.\
 
