@@ -106,5 +106,7 @@ On push to `master`/`main`, after tests and mutation testing pass, the
 nuget.org with `--skip-duplicate` — so a merge only publishes when
 `<Version>` in the csproj has been bumped; otherwise the push is a no-op.
 
-Publishing requires a repository secret named `NUGET_API_KEY` holding a
-nuget.org API key with push permission for the `RedisGeoHash` package.
+Publishing uses [NuGet Trusted Publishing](https://learn.microsoft.com/nuget/nuget-org/trusted-publishing):
+the workflow exchanges a GitHub OIDC token for a short-lived API key via
+`NuGet/login`, so no stored API-key secret is needed. The nuget.org trusted
+publishing policy must name this repo with workflow file `ci.yml`.

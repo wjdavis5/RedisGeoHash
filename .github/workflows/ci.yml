@@ -67,6 +67,9 @@ jobs:
     if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
     needs: [test, mutation]
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write # for NuGet Trusted Publishing (OIDC)
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -74,9 +77,14 @@ jobs:
           dotnet-version: 8.0.x
       - name: Pack
         run: dotnet pack GeoHash/GeoHash.csproj -c Release -o packages
+      - name: NuGet login (OIDC -> temp API key)
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: wjdavis5
       - name: Push to nuget.org
         run: >
           dotnet nuget push "packages/*.nupkg"
-          --api-key "${{ secrets.NUGET_API_KEY }}"
+          --api-key "${{ steps.login.outputs.NUGET_API_KEY }}"
           --source https://api.nuget.org/v3/index.json
           --skip-duplicate
