@@ -1,52 +1,72 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-// ReSharper disable IdentifierTypo
+using System;
 
 namespace GeoHash
 {
     public class RedisGeoHash
     {
-
         private const double GeoLatMin = -85.05112878;
         private const double GeoLatMax = 85.05112878;
         private const double GeoLongMin = -180;
         private const double GeoLongMax = 180;
         public const int GeoStepMax = 26;
 
-        public double[] LatLon { get; private set; }
-        public double Latitude => LatLon[0];
-        public double Longitude => LatLon[1];
+        public double Latitude { get; }
+        public double Longitude { get; }
 
         public ulong GeoHash => GeoHashBits.Bits;
 
-        public GeoHashBits GeoHashBits { get; private set; }
+        public GeoHashBits GeoHashBits { get; }
 
-        public RedisGeoHash(double[] latlon)
+        /* [latitude, longitude] — matches the original public API of this
+         * library, even though Redis commands take longitude first. */
+        public double[] LatLon => new[] { Latitude, Longitude };
+
+        public RedisGeoHash(double latitude, double longitude)
         {
-            LatLon = latlon;
+            if (double.IsNaN(latitude) || latitude < GeoLatMin || latitude > GeoLatMax)
+                throw new ArgumentOutOfRangeException(nameof(latitude), latitude,
+                    $"Latitude must be between {GeoLatMin} and {GeoLatMax}.");
+            if (double.IsNaN(longitude) || longitude < GeoLongMin || longitude > GeoLongMax)
+                throw new ArgumentOutOfRangeException(nameof(longitude), longitude,
+                    $"Longitude must be between {GeoLongMin} and {GeoLongMax}.");
+
+            Latitude = latitude;
+            Longitude = longitude;
             var bits = new GeoHashBits();
-            var res = GeohashEncodeWgs84(Longitude, Latitude, RedisGeoHash.GeoStepMax, ref bits);
+            GeohashEncodeWgs84(longitude, latitude, GeoStepMax, ref bits);
             GeoHashBits = bits;
         }
 
-        private  bool Hashiszero(GeoHashBits r)
+        public RedisGeoHash(double[] latlon)
+            : this(Validate(latlon)[0], latlon[1])
+        {
+        }
+
+        private static double[] Validate(double[] latlon)
+        {
+            if (latlon == null)
+                throw new ArgumentNullException(nameof(latlon));
+            if (latlon.Length != 2)
+                throw new ArgumentException("Expected [latitude, longitude].", nameof(latlon));
+            return latlon;
+        }
+
+        public override string ToString()
+        {
+            return GeoHash.ToString();
+        }
+
+        private static bool Hashiszero(GeoHashBits r)
         {
             return r.Bits == 0 && r.Step == 0;
         }
 
-        private  bool Rangepiszero(GeoHashRange r)
+        private static bool Rangeiszero(GeoHashRange r)
         {
-            return Rangeiszero(r);
-        }
-
-        private  bool Rangeiszero(GeoHashRange r)
-        {
-
             return r.Max == 0.0 && r.Min == 0.0;
         }
 
-         ulong Interleave64(uint xlo, uint ylo)
+        private static ulong Interleave64(uint xlo, uint ylo)
         {
             ulong[] b =
             {
@@ -79,7 +99,7 @@ namespace GeoHash
         /* reverse the interleave process
          * derived from http://stackoverflow.com/questions/4909263
          */
-         ulong Deinterleave64(ulong interleaved)
+        private static ulong Deinterleave64(ulong interleaved)
         {
             ulong[] b =
             {
@@ -112,7 +132,7 @@ namespace GeoHash
             return x | (y << 32);
         }
 
-         void GeohashGetCoordRange(ref GeoHashRange longRange, ref GeoHashRange latRange)
+        private static void GeohashGetCoordRange(ref GeoHashRange longRange, ref GeoHashRange latRange)
         {
             /* These are constraints from EPSG:900913 / EPSG:3785 / OSGEO:41001 */
             /* We can't geocode at the north/south pole. */
@@ -122,19 +142,19 @@ namespace GeoHash
             latRange.Min = GeoLatMin;
         }
 
-         int GeohashEncode(GeoHashRange longRange, GeoHashRange latRange, double longitude, double latitude,
-            ushort step, ref GeoHashBits hash)
+        public static int GeohashEncode(GeoHashRange longRange, GeoHashRange latRange, double longitude,
+            double latitude, ushort step, ref GeoHashBits hash)
         {
             /* Check basic arguments sanity. */
             if (step > 32 || step == 0 ||
-                Rangepiszero(latRange) || Rangepiszero(longRange)) return 0;
+                Rangeiszero(latRange) || Rangeiszero(longRange)) return 0;
 
             /* Return an error when trying to index outside the supported
              * constraints. */
             if (longitude > GeoLongMax) return 0;
             if (longitude < GeoLongMin) return 0;
-            if(latitude > GeoLatMax)return 0;
-            if( latitude < GeoLatMin) return 0;
+            if (latitude > GeoLatMax) return 0;
+            if (latitude < GeoLatMin) return 0;
 
             hash.Bits = 0;
             hash.Step = step;
@@ -157,21 +177,21 @@ namespace GeoHash
             return 1;
         }
 
-         int GeohashEncodeType(double longitude, double latitude, ushort step, ref GeoHashBits hash)
+        public static int GeohashEncodeType(double longitude, double latitude, ushort step, ref GeoHashBits hash)
         {
             GeoHashRange[] r = new GeoHashRange[2];
             GeohashGetCoordRange(ref r[0], ref r[1]);
             return GeohashEncode(r[0], r[1], longitude, latitude, step, ref hash);
-
         }
 
-        public  int GeohashEncodeWgs84(double longitude, double latitude, ushort step,
+        public static int GeohashEncodeWgs84(double longitude, double latitude, ushort step,
             ref GeoHashBits hash)
         {
             return GeohashEncodeType(longitude, latitude, step, ref hash);
         }
 
-         int GeohashDecode(GeoHashRange longRange, GeoHashRange latRange, GeoHashBits hash, GeoHashArea area)
+        public static int GeohashDecode(GeoHashRange longRange, GeoHashRange latRange, GeoHashBits hash,
+            ref GeoHashArea area)
         {
             if (Hashiszero(hash) || Rangeiszero(latRange) ||
                 Rangeiszero(longRange))
@@ -186,8 +206,9 @@ namespace GeoHash
             double latScale = latRange.Max - latRange.Min;
             double longScale = longRange.Max - longRange.Min;
 
-            ulong ilato = hashSep; /* get lat part of deinterleaved hash */
-            ulong ilono = hashSep >> 32; /* shift over to get long part of hash */
+            /* the C original assigns to uint32_t here, truncating each half */
+            uint ilato = (uint) hashSep; /* get lat part of deinterleaved hash */
+            uint ilono = (uint) (hashSep >> 32); /* shift over to get long part of hash */
 
             /* divide by 2**step.
              * Then, for 0-1 coordinate, multiply times scale and add
@@ -204,39 +225,39 @@ namespace GeoHash
             return 1;
         }
 
-         int GeohashDecodeType(GeoHashBits hash, GeoHashArea area)
+        public static int GeohashDecodeType(GeoHashBits hash, ref GeoHashArea area)
         {
             GeoHashRange[] r = new GeoHashRange[2];
-                GeohashGetCoordRange(ref r[0], ref r[1]);
-                return GeohashDecode(r[0], r[1], hash, area);
+            GeohashGetCoordRange(ref r[0], ref r[1]);
+            return GeohashDecode(r[0], r[1], hash, ref area);
         }
 
-         int GeohashDecodeWgs84(GeoHashBits hash, GeoHashArea area)
+        public static int GeohashDecodeWgs84(GeoHashBits hash, ref GeoHashArea area)
         {
-            return GeohashDecodeType(hash, area);
+            return GeohashDecodeType(hash, ref area);
         }
 
-         int GeohashDecodeAreaToLongLat(GeoHashArea area, double[] xy)
+        public static int GeohashDecodeAreaToLongLat(GeoHashArea area, double[] xy)
         {
             xy[0] = (area.Longitude.Min + area.Longitude.Max) / 2;
             xy[1] = (area.Latitude.Min + area.Latitude.Max) / 2;
             return 1;
         }
 
-         int GeohashDecodeToLongLatType(GeoHashBits hash, double[] xy)
+        public static int GeohashDecodeToLongLatType(GeoHashBits hash, double[] xy)
         {
             GeoHashArea area = new GeoHashArea();
-            if (GeohashDecodeType(hash, area) == 0)
+            if (GeohashDecodeType(hash, ref area) == 0)
                 return 0;
             return GeohashDecodeAreaToLongLat(area, xy);
         }
 
-         int GeohashDecodeToLongLatWgs84(GeoHashBits hash, double[] xy)
+        public static int GeohashDecodeToLongLatWgs84(GeoHashBits hash, double[] xy)
         {
             return GeohashDecodeToLongLatType(hash, xy);
         }
 
-         void geohash_move_x(GeoHashBits hash, short d)
+        private static void GeohashMoveX(ref GeoHashBits hash, short d)
         {
             if (d == 0)
                 return;
@@ -260,7 +281,7 @@ namespace GeoHash
             hash.Bits = (x | y);
         }
 
-         void geohash_move_y(GeoHashBits hash, short d)
+        private static void GeohashMoveY(ref GeoHashBits hash, short d)
         {
             if (d == 0)
                 return;
@@ -283,7 +304,7 @@ namespace GeoHash
             hash.Bits = (x | y);
         }
 
-          void GeohashNeighbors(GeoHashBits hash, GeoHashNeighbors neighbors)
+        public static void GeohashNeighbors(GeoHashBits hash, ref GeoHashNeighbors neighbors)
         {
             neighbors.East = hash;
             neighbors.West = hash;
@@ -294,30 +315,43 @@ namespace GeoHash
             neighbors.NorthEast = hash;
             neighbors.NorthWest = hash;
 
-            geohash_move_x(neighbors.East, 1);
-            geohash_move_y(neighbors.East, 0);
+            GeohashMoveX(ref neighbors.East, 1);
+            GeohashMoveY(ref neighbors.East, 0);
 
-            geohash_move_x(neighbors.West, -1);
-            geohash_move_y(neighbors.West, 0);
+            GeohashMoveX(ref neighbors.West, -1);
+            GeohashMoveY(ref neighbors.West, 0);
 
-            geohash_move_x(neighbors.South, 0);
-            geohash_move_y(neighbors.South, -1);
+            GeohashMoveX(ref neighbors.South, 0);
+            GeohashMoveY(ref neighbors.South, -1);
 
-            geohash_move_x(neighbors.North, 0);
-            geohash_move_y(neighbors.North, 1);
+            GeohashMoveX(ref neighbors.North, 0);
+            GeohashMoveY(ref neighbors.North, 1);
 
-            geohash_move_x(neighbors.NorthWest, -1);
-            geohash_move_y(neighbors.NorthWest, 1);
+            GeohashMoveX(ref neighbors.NorthWest, -1);
+            GeohashMoveY(ref neighbors.NorthWest, 1);
 
-            geohash_move_x(neighbors.NorthEast, 1);
-            geohash_move_y(neighbors.NorthEast, 1);
+            GeohashMoveX(ref neighbors.NorthEast, 1);
+            GeohashMoveY(ref neighbors.NorthEast, 1);
 
-            geohash_move_x(neighbors.SouthEast, 1);
-            geohash_move_y(neighbors.SouthEast, -1);
+            GeohashMoveX(ref neighbors.SouthEast, 1);
+            GeohashMoveY(ref neighbors.SouthEast, -1);
 
-            geohash_move_x(neighbors.SouthWest, -1);
-            geohash_move_y(neighbors.SouthWest, -1);
+            GeohashMoveX(ref neighbors.SouthWest, -1);
+            GeohashMoveY(ref neighbors.SouthWest, -1);
         }
-        
+
+        public GeoHashNeighbors Neighbors()
+        {
+            var neighbors = new GeoHashNeighbors();
+            GeohashNeighbors(GeoHashBits, ref neighbors);
+            return neighbors;
+        }
+
+        public GeoHashArea Decode()
+        {
+            var area = new GeoHashArea();
+            GeohashDecodeWgs84(GeoHashBits, ref area);
+            return area;
+        }
     }
 }

@@ -8,7 +8,7 @@
         GeohashSouth,
         GeohashSouthWest,
         GeohashSouthEast,
-        GeohashNortWest,
-        GeohashNortEast
+        GeohashNorthWest,
+        GeohashNorthEast
     }
 }

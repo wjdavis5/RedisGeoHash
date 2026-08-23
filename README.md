@@ -1,40 +1,70 @@
 # RedisGeoHash
-A library for creating RedisGeo Hash values within .NET
+
+A library for creating RedisGeo Hash values within .NET.
 
 # Credits
-This is a C# port of the Redis Geo Hash code by antirez
+
+This is a C# port of the Redis Geo Hash code by antirez:
 https://github.com/antirez/redis
 
-
 # Why?
-When I was involved in the writting of the Stackexchange.Redis Geo functionality I become interested in how they are using GeoHashes to store
-information in sorted sets. Behind the scense a RedisGeo collection is nothing more than a SortSet. They use a numerical represenation of 
-GeoHashes to achieve this. I wanted to do the same thing from within .NET to implemented local GEO collections for caching purposes at work.\
 
+When I was involved in the writing of the StackExchange.Redis Geo
+functionality I became interested in how Redis uses geohashes to store
+information in sorted sets. Behind the scenes a RedisGeo collection is nothing
+more than a sorted set: Redis uses a numerical representation of geohashes as
+the member scores. I wanted to do the same thing from within .NET to implement
+local GEO collections for caching purposes at work.
 
 # How?
-Below is a code snip from the test case included in the project. I compared the output from this application to the output found in Redis.
 
-```
-public void Test()
-        {
-            double lat = 39.923422, lon = -86.1078998;
-            var x = new RedisGeoHash(new []{lat,lon});
-            Console.WriteLine(x.ToString());
-            Console.ReadLine();
-        }
-            
-			
-    }
+```csharp
+using GeoHash;
 
+var hash = new RedisGeoHash(39.923422, -86.1078998); // latitude, longitude
+Console.WriteLine(hash.GeoHash); // 1782901374540128
 ```
 
 **Compared to Redis:**
+
 ```
-will@will-laptop:/mnt/c/Users/wdavis$ redis-cli
-127.0.0.1:6379> geoadd willt -86.1078998 39.923422 1
+127.0.0.1:6379> GEOADD willt -86.1078998 39.923422 1
 (integer) 1
-127.0.0.1:6379> zrange willt 0 100 WITHSCORES
+127.0.0.1:6379> ZRANGE willt 0 100 WITHSCORES
 1) "1"
 2) "1782901374540128"
+```
+
+Note that Redis commands take longitude first; this library's constructor
+takes latitude first. Coordinates outside the supported range (latitude
+±85.05112878, longitude ±180) throw `ArgumentOutOfRangeException`.
+
+## Decoding
+
+`Decode()` returns the bounding box of the geohash cell, and
+`GeohashDecodeToLongLatWgs84` returns its center point:
+
+```csharp
+var area = hash.Decode();
+// area.Latitude.Min/Max and area.Longitude.Min/Max bound the original point
+
+var xy = new double[2];
+RedisGeoHash.GeohashDecodeToLongLatWgs84(hash.GeoHashBits, xy);
+// xy[0] = longitude, xy[1] = latitude of the cell center
+```
+
+## Neighbors
+
+`Neighbors()` returns the eight adjacent cells:
+
+```csharp
+var neighbors = hash.Neighbors();
+Console.WriteLine(neighbors.North.Bits);
+```
+
+# Building and testing
+
+```
+dotnet build
+dotnet test
 ```
