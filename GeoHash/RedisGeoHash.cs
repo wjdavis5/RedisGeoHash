@@ -106,28 +106,28 @@ namespace GeoHash
                 0x5555555555555555UL, 0x3333333333333333UL, 0x0F0F0F0F0F0F0F0FUL, 0x00FF00FF00FF00FFUL,
                 0x0000FFFF0000FFFFUL, 0x00000000FFFFFFFFUL
             };
-            int[] s = {0, 1, 2, 4, 8, 16};
+            int[] s = {1, 2, 4, 8, 16};
 
             ulong x = interleaved;
             ulong y = interleaved >> 1;
 
-            x = (x | (x >> s[0])) & b[0];
-            y = (y | (y >> s[0])) & b[0];
+            x = x & b[0];
+            y = y & b[0];
 
-            x = (x | (x >> s[1])) & b[1];
-            y = (y | (y >> s[1])) & b[1];
+            x = (x | (x >> s[0])) & b[1];
+            y = (y | (y >> s[0])) & b[1];
 
-            x = (x | (x >> s[2])) & b[2];
-            y = (y | (y >> s[2])) & b[2];
+            x = (x | (x >> s[1])) & b[2];
+            y = (y | (y >> s[1])) & b[2];
 
-            x = (x | (x >> s[3])) & b[3];
-            y = (y | (y >> s[3])) & b[3];
+            x = (x | (x >> s[2])) & b[3];
+            y = (y | (y >> s[2])) & b[3];
 
-            x = (x | (x >> s[4])) & b[4];
-            y = (y | (y >> s[4])) & b[4];
+            x = (x | (x >> s[3])) & b[4];
+            y = (y | (y >> s[3])) & b[4];
 
-            x = (x | (x >> s[5])) & b[5];
-            y = (y | (y >> s[5])) & b[5];
+            x = (x | (x >> s[4])) & b[5];
+            y = (y | (y >> s[4])) & b[5];
 
             return x | (y << 32);
         }
@@ -214,13 +214,13 @@ namespace GeoHash
              * Then, for 0-1 coordinate, multiply times scale and add
                to the min to get the absolute coordinate. */
             area.Latitude.Min =
-                latRange.Min + (ilato * 1.0 / (1ul << step)) * latScale;
+                latRange.Min + ((double) ilato / (1ul << step)) * latScale;
             area.Latitude.Max =
-                latRange.Min + ((ilato + 1) * 1.0 / (1ul << step)) * latScale;
+                latRange.Min + ((double) (ilato + 1) / (1ul << step)) * latScale;
             area.Longitude.Min =
-                longRange.Min + (ilono * 1.0 / (1ul << step)) * longScale;
+                longRange.Min + ((double) ilono / (1ul << step)) * longScale;
             area.Longitude.Max =
-                longRange.Min + ((ilono + 1) * 1.0 / (1ul << step)) * longScale;
+                longRange.Min + ((double) (ilono + 1) / (1ul << step)) * longScale;
 
             return 1;
         }
@@ -257,16 +257,15 @@ namespace GeoHash
             return GeohashDecodeToLongLatType(hash, xy);
         }
 
+        /* d is always +1 or -1; the C original's d == 0 no-op calls are elided */
         private static void GeohashMoveX(ref GeoHashBits hash, short d)
         {
-            if (d == 0)
-                return;
-
             ulong x = hash.Bits & 0xaaaaaaaaaaaaaaaaUL;
             ulong y = hash.Bits & 0x5555555555555555UL;
 
             ulong zz = 0x5555555555555555UL >> (64 - hash.Step * 2);
 
+            // Stryker disable once equality : d is always +1 or -1, so > and >= are equivalent
             if (d > 0)
             {
                 x = x + (zz + 1);
@@ -283,13 +282,11 @@ namespace GeoHash
 
         private static void GeohashMoveY(ref GeoHashBits hash, short d)
         {
-            if (d == 0)
-                return;
-
             ulong x = hash.Bits & 0xaaaaaaaaaaaaaaaaUL;
             ulong y = hash.Bits & 0x5555555555555555UL;
 
             ulong zz = 0xaaaaaaaaaaaaaaaaUL >> (64 - hash.Step * 2);
+            // Stryker disable once equality : d is always +1 or -1, so > and >= are equivalent
             if (d > 0)
             {
                 y = y + (zz + 1);
@@ -316,15 +313,11 @@ namespace GeoHash
             neighbors.NorthWest = hash;
 
             GeohashMoveX(ref neighbors.East, 1);
-            GeohashMoveY(ref neighbors.East, 0);
 
             GeohashMoveX(ref neighbors.West, -1);
-            GeohashMoveY(ref neighbors.West, 0);
 
-            GeohashMoveX(ref neighbors.South, 0);
             GeohashMoveY(ref neighbors.South, -1);
 
-            GeohashMoveX(ref neighbors.North, 0);
             GeohashMoveY(ref neighbors.North, 1);
 
             GeohashMoveX(ref neighbors.NorthWest, -1);

@@ -1,0 +1,19 @@
+{
+  "stryker-config": {
+    "project": "GeoHash.csproj",
+    "solution": "GeoHash.sln",
+    "test-projects": [
+      "TestApp/TestApp.csproj"
+    ],
+    "reporters": [
+      "html",
+      "markdown",
+      "progress"
+    ],
+    "thresholds": {
+      "high": 100,
+      "low": 95,
+      "break": 90
+    }
+  }
+}

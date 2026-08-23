@@ -68,3 +68,43 @@ Console.WriteLine(neighbors.North.Bits);
 dotnet build
 dotnet test
 ```
+
+## Mutation testing
+
+[Stryker.NET](https://stryker-mutator.io/docs/stryker-net/introduction/) is
+pinned as a local dotnet tool and configured by `stryker-config.json`:
+
+```
+dotnet tool restore
+dotnet dotnet-stryker
+```
+
+The run fails if the mutation score drops below the `break` threshold in
+`stryker-config.json`. The HTML report lands in `StrykerOutput/`.
+
+## Benchmarks
+
+[BenchmarkDotNet](https://benchmarkdotnet.org/) benchmarks live in
+`Benchmarks/`:
+
+```
+dotnet run -c Release --project Benchmarks -- --filter '*'
+```
+
+# CI and releases
+
+`.github/workflows/ci.yml` runs on every PR and push to `master`/`main`:
+
+- **Build & Test** — `dotnet test` on the full solution
+- **Mutation Testing** — Stryker, failing below the configured threshold,
+  with the HTML report uploaded as an artifact
+- **Benchmarks** — a short BenchmarkDotNet job, results uploaded as an
+  artifact
+
+On push to `master`/`main`, after tests and mutation testing pass, the
+**Publish to NuGet** job packs `GeoHash/GeoHash.csproj` and pushes it to
+nuget.org with `--skip-duplicate` — so a merge only publishes when
+`<Version>` in the csproj has been bumped; otherwise the push is a no-op.
+
+Publishing requires a repository secret named `NUGET_API_KEY` holding a
+nuget.org API key with push permission for the `RedisGeoHash` package.
