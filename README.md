@@ -2,6 +2,8 @@
 
 A library for creating RedisGeo Hash values within .NET.
 
+Status: active; published to nuget.org via NuGet trusted publishing on merge to `master`/`main` (see [CI and releases](#ci-and-releases)).
+
 # Credits
 
 This is a C# port of the Redis Geo Hash code by antirez:
